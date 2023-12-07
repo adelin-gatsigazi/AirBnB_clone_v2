@@ -5,7 +5,7 @@
 import os
 from fabric.api import run, put, env
 
-env.hosts = ['18.206.194.154', '3.236.115.236']
+env.hosts = ['44.192.38.3', '3.239.82.120']
 env.user = "ubuntu"
 
 
@@ -32,4 +32,4 @@ def do_deploy(archive_path):
             print("New version deployed!")
             return True
         except Exception:
-            return False
+            return False.
