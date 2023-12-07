@@ -1,64 +1,39 @@
 #!/usr/bin/python3
 """
-Fabric script that distributes an archive to your web servers
+    Distributes an archive to your web servers,
+    using the function do_deploy
+    def do_deploy(archive_path):
+    Return False iff archive path doesn't exist
 """
 
-from fabric.api import env, put, run, local
+from fabric.api import put, run, env
 from os.path import exists
-from datetime import datetime
-
-# Set Fabric environment variables
-env.hosts = ['<IP web-01>', '<IP web-02>']
-env.user = '<your_username>'
-env.key_filename = ['<path_to_your_private_key>']
-
-
-def do_pack():
-    """
-    Generate a .tgz archive from the contents of the web_static folder
-    """
-    try:
-        local("mkdir -p versions")
-        timestr = datetime.now().strftime("%Y%m%d%H%M%S")
-        filename = "versions/web_static_{}.tgz".format(timestr)
-        local("tar -cvzf {} web_static".format(filename))
-        return filename
-    except Exception as e:
-        return None
+env.hosts = ['3.229.113.167', '3.234.210.158']
+env.user = 'ubuntu'
+env.identity = '~/.ssh/school'
+env.password = None
 
 
 def do_deploy(archive_path):
     """
-    Distribute an archive to your web servers
+    Deploys an archive to a server
     """
-    if not exists(archive_path):
+    if exists(archive_path) is False:
         return False
-
     try:
-        # Upload the archive
-        put(archive_path, "/tmp/")
-
-        # Extract the archive to the web server
-        filename = archive_path.split("/")[-1]
-        foldername = "/data/web_static/releases/{}".format(filename.split(".")[0])
-        run("mkdir -p {}".format(foldername))
-        run("tar -xzf /tmp/{} -C {}".format(filename, foldername))
-
-        # Delete the archive from the web server
-        run("rm /tmp/{}".format(filename))
-
-        # Move contents out of web_static and clean up
-        run("mv {}/web_static/* {}".format(foldername, foldername))
-        run("rm -rf {}/web_static".format(foldername))
-
-        # Update symbolic link
-        run("rm -rf /data/web_static/current")
-        run("ln -s {} /data/web_static/current".format(foldername))
-
+        file_N = archive_path.split("/")[-1]
+        n = file_N.split(".")[0]
+        path = "/data/web_static/releases/"
+        put(archive_path, '/tmp/')
+        run('mkdir -p {}{}/'.format(path, n))
+        run('tar -xzf /tmp/{} -C {}{}/'.format(file_N, path, n))
+        run('rm /tmp/{}'.format(file_N))
+        run('mv {0}{1}/web_static/* {0}{1}/'.format(path, n))
+        run('rm -rf {}{}/web_static'.format(path, n))
+        run('rm -rf /data/web_static/current')
+        run('ln -s {}{}/ /data/web_static/current'.format(path, n))
+        run('chmod -R 755 /data/')
         print("New version deployed!")
-
         return True
-    except Exception as e:
+    except FileNotFoundError:
         return False
-
-
