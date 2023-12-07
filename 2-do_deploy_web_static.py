@@ -7,6 +7,7 @@ from fabric.api import env, put, run, local
 from os.path import exists
 from datetime import datetime
 
+# Set Fabric environment variables
 env.hosts = ['<IP web-01>', '<IP web-02>']
 env.user = '<your_username>'
 env.key_filename = ['<path_to_your_private_key>']
@@ -22,7 +23,7 @@ def do_pack():
         filename = "versions/web_static_{}.tgz".format(timestr)
         local("tar -cvzf {} web_static".format(filename))
         return filename
-    except Exception:
+    except Exception as e:
         return None
 
 
@@ -57,7 +58,7 @@ def do_deploy(archive_path):
         print("New version deployed!")
 
         return True
-    except Exception:
+    except Exception as e:
         return False
-        
+
 
